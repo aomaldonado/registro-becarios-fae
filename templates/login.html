@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión — Registro Becarios PUCE</title>
+    <meta name="description" content="Acceso al Sistema de Registro de Becarios Militares PUCE">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="alerts-container" id="alertsContainer">
+        {% for category, message in messages %}
+        <div class="alert-flash {{ category }}">
+            <i class="fas fa-{% if category=='success' %}check-circle{% elif category=='danger' %}exclamation-circle{% elif category=='warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+            <span>{{ message }}</span>
+            <button class="alert-close" onclick="this.parentElement.remove()">✕</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endwith %}
+
+<div class="login-page">
+    <!-- Partículas decorativas -->
+    <div style="position:absolute;top:10%;left:5%;width:60px;height:60px;border:1px solid rgba(245,158,11,0.2);border-radius:50%;animation:float 6s ease-in-out infinite;"></div>
+    <div style="position:absolute;bottom:15%;right:8%;width:40px;height:40px;border:1px solid rgba(30,77,183,0.3);border-radius:8px;animation:float 4s ease-in-out infinite reverse;"></div>
+
+    <div class="login-card">
+        <!-- Logo -->
+        <div class="login-logo">
+            <div class="logo-shield">🎖️</div>
+            <h1 class="login-title">Sistema de Becarios</h1>
+            <p class="login-subtitle">Pontificia Universidad Católica del Ecuador</p>
+        </div>
+
+        <!-- Formulario -->
+        <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
+            <div class="form-group">
+                <label for="correo">
+                    <i class="fas fa-envelope me-1"></i> Correo electrónico
+                </label>
+                <input
+                    type="email"
+                    class="form-control"
+                    id="correo"
+                    name="correo"
+                    placeholder="usuario@becarios.mil.ec"
+                    required
+                    autocomplete="email"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">
+                    <i class="fas fa-lock me-1"></i> Contraseña
+                </label>
+                <div style="position:relative;">
+                    <input
+                        type="password"
+                        class="form-control"
+                        id="password"
+                        name="password"
+                        placeholder="••••••••"
+                        required
+                        autocomplete="current-password"
+                        style="padding-right:2.5rem;"
+                    >
+                    <button type="button"
+                        id="togglePwd"
+                        style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0;"
+                        title="Mostrar/ocultar contraseña">
+                        <i class="fas fa-eye" id="eyeIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100 mt-1" id="btnLogin">
+                <i class="fas fa-sign-in-alt"></i> Ingresar al Sistema
+            </button>
+        </form>
+
+        <!-- Footer de la card -->
+        <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--glass-border);text-align:center;">
+            <p style="font-size:0.75rem;color:var(--text-muted);">
+                <i class="fas fa-shield-alt me-1"></i>
+                Acceso restringido a personal autorizado.<br>
+                Si tienes problemas para acceder, contacta al administrador.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Toggle visibilidad contraseña
+    const toggleBtn = document.getElementById('togglePwd');
+    const pwdInput  = document.getElementById('password');
+    const eyeIcon   = document.getElementById('eyeIcon');
+
+    toggleBtn.addEventListener('click', function() {
+        const visible = pwdInput.type === 'text';
+        pwdInput.type = visible ? 'password' : 'text';
+        eyeIcon.className = visible ? 'fas fa-eye' : 'fas fa-eye-slash';
+    });
+
+    // Feedback visual al hacer clic en el botón
+    document.getElementById('btnLogin').addEventListener('click', function() {
+        this.classList.add('btn-loading');
+        this.innerHTML = '<i class="fas fa-sign-in-alt"></i> Ingresando...';
+    });
+
+    // Auto-dismiss flashes
+    document.querySelectorAll('.alert-flash').forEach(function(el) {
+        setTimeout(function() {
+            el.style.transition = 'all 0.3s ease';
+            el.style.opacity = '0';
+            setTimeout(function() { el.remove(); }, 300);
+        }, 5000);
+    });
+</script>
+<style>
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50%       { transform: translateY(-15px); }
+    }
+</style>
+</body>
+</html>
