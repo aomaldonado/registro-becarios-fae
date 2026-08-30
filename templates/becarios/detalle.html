@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block titulo %}{{ becario.nombre_completo() }} — Becarios{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="breadcrumb-nav">
+        <a href="{{ url_for('admin.dashboard') }}">Dashboard</a> <span>/</span>
+        <a href="{{ url_for('becarios.lista') }}">Becarios</a> <span>/</span>
+        {{ becario.nombre_completo() }}
+    </div>
+
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+        <div>
+            <h1 class="page-title">{{ becario.identificacion_militar() }}</h1>
+            <p class="page-subtitle">
+                <span class="badge-estado {% if becario.esta_activo() %}badge-activo{% else %}badge-inactivo{% endif %}">
+                    {% if becario.esta_activo() %}Activo{% else %}Dado de Baja{% endif %}
+                </span>
+                <span style="margin-left:0.5rem;color:var(--text-muted);">ID: {{ becario.id_becario }}</span>
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('becarios.editar', id_becario=becario.id_becario) }}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Editar
+            </a>
+            {% if becario.esta_activo() %}
+            <form method="POST" action="{{ url_for('becarios.baja', id_becario=becario.id_becario) }}"
+                  onsubmit="return confirm('¿Confirma dar de baja a {{ becario.nombre_completo() }}?');">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-user-times"></i> Dar de Baja
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Datos Principales -->
+        <div class="col-lg-5">
+            <div class="card-glass h-100">
+                <h2 style="font-size:0.9rem;font-weight:600;color:var(--gold);margin-bottom:1.25rem;text-transform:uppercase;letter-spacing:0.08em;">
+                    <i class="fas fa-user me-2"></i> Información Personal
+                </h2>
+                <div class="d-flex flex-column gap-3">
+                    {% set campos = [
+                        ('Cédula',        becario.cedula),
+                        ('Nombres',       becario.nombres),
+                        ('Apellidos',     becario.apellidos),
+                        ('Correo',        becario.correo),
+                        ('Teléfono',      becario.telefono or '—'),
+                        ('Rango',         becario.rango_militar or '—'),
+                        ('Unidad',        becario.unidad or '—'),
+                        ('N° Militar',    becario.numero_militar or '—'),
+                        ('Universidad',   becario.universidad or 'PUCE'),
+                        ('Carrera',       becario.carrera or '—'),
+                        ('Semestre',      becario.semestre|string if becario.semestre else '—'),
+                        ('Año Inicio',    becario.anio_inicio|string if becario.anio_inicio else '—'),
+                        ('Año Fin Est.',  becario.anio_fin_estimado|string if becario.anio_fin_estimado else '—'),
+                    ] %}
+                    {% for label, value in campos %}
+                    <div style="display:flex;justify-content:space-between;gap:1rem;font-size:0.875rem;padding-bottom:0.75rem;border-bottom:1px solid var(--glass-border);">
+                        <span style="color:var(--text-muted);white-space:nowrap;">{{ label }}</span>
+                        <span style="font-weight:500;text-align:right;">{{ value }}</span>
+                    </div>
+                    {% endfor %}
+                    <div style="display:flex;justify-content:space-between;gap:1rem;font-size:0.875rem;">
+                        <span style="color:var(--text-muted);">Registrado por</span>
+                        <span style="font-weight:500;">{{ becario.registrado_por or '—' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historial de Novedades -->
+        <div class="col-lg-7">
+            <div class="card-glass">
+                <h2 style="font-size:0.9rem;font-weight:600;color:var(--gold);margin-bottom:1.25rem;text-transform:uppercase;letter-spacing:0.08em;">
+                    <i class="fas fa-history me-2"></i> Últimas 30 Novedades
+                </h2>
+                {% if novedades %}
+                <div class="table-wrapper" style="border:none;background:transparent;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Hora</th>
+                                <th>Estado</th>
+                                <th>Observación</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for n in novedades %}
+                            <tr>
+                                <td style="font-size:0.82rem;white-space:nowrap;">
+                                    {{ n.fecha.strftime('%d/%m/%Y') if n.fecha else '—' }}
+                                </td>
+                                <td style="font-size:0.82rem;color:var(--text-muted);">
+                                    {{ n.hora.strftime('%H:%M') if n.hora else '—' }}
+                                </td>
+                                <td>
+                                    <span class="badge-estado badge-activo" style="font-size:0.7rem;">
+                                        {{ n.nombre_estado() }}
+                                    </span>
+                                </td>
+                                <td style="font-size:0.8rem;color:var(--text-muted);">
+                                    {{ n.observacion or '' }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div style="text-align:center;padding:2rem;color:var(--text-muted);">
+                    <i class="fas fa-calendar-times" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.4;"></i>
+                    Sin novedades registradas.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

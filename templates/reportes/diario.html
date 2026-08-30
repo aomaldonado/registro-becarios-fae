@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block titulo %}Reporte Diario — {{ fecha }}{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+            <div class="breadcrumb-nav">
+                <a href="{{ url_for('admin.dashboard') }}">Dashboard</a> <span>/</span> Reporte Diario
+            </div>
+            <h1 class="page-title">Reporte <span class="title-accent">Diario</span></h1>
+            <p class="page-subtitle">
+                <i class="fas fa-calendar-day me-1"></i> {{ fecha }}
+                · {{ datos | length }} becario(s)
+            </p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+            <!-- Selector de fecha -->
+            <form method="GET" action="{{ url_for('reportes.diario') }}" class="d-flex gap-2">
+                <input type="date" class="form-control" name="fecha"
+                       value="{{ fecha }}" style="max-width:180px;">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+            <!-- Botón EmailJS -->
+            <button class="btn btn-email" id="btnEnviarEmail"
+                    onclick="enviarReporteEmail()">
+                <i class="fas fa-envelope"></i> Enviar por Email
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-wrapper">
+        <table id="tablaReporte">
+            <thead>
+                <tr>
+                    <th>Rango</th>
+                    <th>Apellidos y Nombres</th>
+                    <th>Cédula</th>
+                    <th>Carrera</th>
+                    <th>Semestre</th>
+                    <th>Estado</th>
+                    <th>Hora</th>
+                    <th>Observación</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in datos %}
+                <tr>
+                    <td><span class="badge-estado badge-info">{{ r.rango_militar or '—' }}</span></td>
+                    <td style="font-weight:500;">{{ r.militar }}</td>
+                    <td style="font-family:monospace;font-size:0.8rem;">{{ r.cedula }}</td>
+                    <td>{{ r.carrera or '—' }}</td>
+                    <td style="text-align:center;">{{ r.semestre or '—' }}</td>
+                    <td>
+                        {% if r.estado_actual and r.estado_actual != 'Sin registro' %}
+                        <span class="badge-estado badge-activo">{{ r.estado_actual }}</span>
+                        {% else %}
+                        <span class="badge-estado badge-inactivo">Sin registro</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:0.82rem;color:var(--text-muted);">{{ r.hora or '—' }}</td>
+                    <td style="font-size:0.82rem;color:var(--text-muted);">{{ r.observacion or '' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" style="text-align:center;padding:3rem;color:var(--text-muted);">
+                        <i class="fas fa-inbox" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.4;"></i>
+                        No hay novedades registradas para esta fecha.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="margin-top:1rem;font-size:0.8rem;color:var(--text-muted);">
+        <i class="fas fa-database me-1"></i> Datos desde SQL Server · Generado {{ now.strftime('%d/%m/%Y %H:%M') if now else '' }}
+    </div>
+</div>
+
+<!-- Modal resultado email -->
+<div id="emailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;align-items:center;justify-content:center;">
+    <div class="card-glass" style="max-width:420px;width:90%;padding:2rem;text-align:center;">
+        <div id="emailIcon" style="font-size:3rem;margin-bottom:1rem;">📧</div>
+        <div id="emailMsg" style="font-size:1rem;font-weight:600;margin-bottom:0.5rem;"></div>
+        <div id="emailSub" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.5rem;"></div>
+        <button onclick="document.getElementById('emailModal').style.display='none';" class="btn btn-primary">
+            Cerrar
+        </button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Configuración EmailJS (inyectada desde Flask)
+const EMAILJS_SERVICE_ID  = "{{ emailjs_service_id }}";
+const EMAILJS_TEMPLATE_ID = "{{ emailjs_template_id }}";
+const EMAILJS_PUBLIC_KEY  = "{{ emailjs_public_key }}";
+
+function mostrarModal(icon, msg, sub) {
+    document.getElementById('emailIcon').textContent = icon;
+    document.getElementById('emailMsg').textContent  = msg;
+    document.getElementById('emailSub').textContent  = sub;
+    document.getElementById('emailModal').style.display = 'flex';
+}
+
+async function enviarReporteEmail() {
+    const btn = document.getElementById('btnEnviarEmail');
+    btn.disabled    = true;
+    btn.innerHTML   = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+    // 1. Obtener datos JSON del reporte
+    const fecha    = "{{ fecha }}";
+    const res      = await fetch(`{{ url_for('reportes.diario') }}?format=json&fecha=${fecha}`);
+    const payload  = await res.json();
+
+    // 2. Construir cuerpo del email
+    const filas = payload.registros.map(r =>
+        `${r.rango_militar || ''} ${r.militar} — ${r.estado_actual || 'Sin registro'} ${r.hora ? '('+r.hora+')' : ''} ${r.observacion ? '- '+r.observacion : ''}`
+    ).join('\n');
+
+    const templateParams = {
+        fecha:          fecha,
+        total_becarios: payload.total,
+        cuerpo_reporte: filas || 'Sin registros para esta fecha.',
+        generado_por:   "{{ session.get('nombre', 'Sistema') }}",
+    };
+
+    // 3. Inicializar EmailJS y enviar
+    if (EMAILJS_PUBLIC_KEY && EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
+        try {
+            emailjs.init(EMAILJS_PUBLIC_KEY);
+            await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+            mostrarModal('✅', '¡Reporte enviado!', `El reporte del ${fecha} fue enviado correctamente por correo.`);
+        } catch (err) {
+            mostrarModal('❌', 'Error al enviar', `EmailJS: ${err.text || err.message || JSON.stringify(err)}`);
+        }
+    } else {
+        // Demo: mostrar qué se habría enviado
+        mostrarModal('⚠️', 'EmailJS no configurado',
+            'Configura tu PUBLIC_KEY, SERVICE_ID y TEMPLATE_ID en el archivo .env para activar el envío.');
+    }
+
+    btn.disabled  = false;
+    btn.innerHTML = '<i class="fas fa-envelope"></i> Enviar por Email';
+}
+</script>
+{% endblock %}

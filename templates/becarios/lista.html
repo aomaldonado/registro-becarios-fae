@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block titulo %}Becarios — Registro Becarios{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+            <div class="breadcrumb-nav">
+                <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+                <span>/</span> Becarios
+            </div>
+            <h1 class="page-title">Gestión de <span class="title-accent">Becarios</span></h1>
+            <p class="page-subtitle">Registro completo almacenado en SQL Server</p>
+        </div>
+        <a href="{{ url_for('admin.nuevo_usuario') }}" class="btn btn-gold">
+            <i class="fas fa-user-plus"></i> Nuevo Becario
+        </a>
+    </div>
+
+    <!-- Buscador -->
+    <div class="search-bar mb-4">
+        <form method="GET" action="{{ url_for('becarios.lista') }}">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="form-control" name="q"
+                   value="{{ busqueda }}"
+                   placeholder="Buscar por nombre, cédula, carrera...">
+        </form>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Rango</th>
+                    <th>Nombre Completo</th>
+                    <th>Cédula</th>
+                    <th>Correo</th>
+                    <th>Carrera</th>
+                    <th>Semestre</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in becarios %}
+                <tr>
+                    <td><span class="badge-estado badge-info">{{ b.rango_militar or '—' }}</span></td>
+                    <td style="font-weight:500;">{{ b.nombre_completo() }}</td>
+                    <td style="font-family:monospace;font-size:0.8rem;">{{ b.cedula }}</td>
+                    <td style="font-size:0.82rem;color:var(--text-muted);">{{ b.correo }}</td>
+                    <td>{{ b.carrera or '—' }}</td>
+                    <td style="text-align:center;">{{ b.semestre or '—' }}</td>
+                    <td>
+                        <span class="badge-estado {% if b.esta_activo() %}badge-activo{% else %}badge-inactivo{% endif %}">
+                            {% if b.esta_activo() %}Activo{% else %}Baja{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="{{ url_for('becarios.detalle', id_becario=b.id_becario) }}"
+                               class="btn btn-ghost btn-sm" title="Ver detalle">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ url_for('becarios.editar', id_becario=b.id_becario) }}"
+                               class="btn btn-ghost btn-sm" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% if b.esta_activo() %}
+                            <form method="POST"
+                                  action="{{ url_for('becarios.baja', id_becario=b.id_becario) }}"
+                                  onsubmit="return confirm('¿Confirma dar de baja a {{ b.nombre_completo() }}?');">
+                                <button type="submit" class="btn btn-danger btn-sm" title="Desactivar Becario">
+                                    <i class="fas fa-user-times"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" style="text-align:center;padding:3rem;color:var(--text-muted);">
+                        <i class="fas fa-users" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.4;"></i>
+                        {% if busqueda %}No se encontraron becarios con "{{ busqueda }}".{% else %}No hay becarios registrados.{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="margin-top:1rem;font-size:0.8rem;color:var(--text-muted);">
+        <i class="fas fa-database me-1"></i>
+        {{ becarios | length }} becario(s) encontrado(s) — datos almacenados en SQL Server
+    </div>
+</div>
+{% endblock %}

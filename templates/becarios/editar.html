@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block titulo %}Editar — {{ becario.nombre_completo() }}{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div class="breadcrumb-nav">
+            <a href="{{ url_for('admin.dashboard') }}">Dashboard</a> <span>/</span>
+            <a href="{{ url_for('becarios.lista') }}">Becarios</a> <span>/</span>
+            <a href="{{ url_for('becarios.detalle', id_becario=becario.id_becario) }}">{{ becario.nombre_completo() }}</a>
+            <span>/</span> Editar
+        </div>
+        <h1 class="page-title">Editar <span class="title-accent">Becario</span></h1>
+        <p class="page-subtitle">Los cambios se registran en SQL Server mediante sp_becario_actualizar</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('becarios.editar', id_becario=becario.id_becario) }}">
+        <div class="form-card" style="max-width:800px;">
+
+            <div class="form-section-title"><i class="fas fa-user me-2"></i>Datos Personales</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Cédula <span style="color:var(--text-muted);font-size:0.75rem;">(no editable)</span></label>
+                    <input type="text" class="form-control" value="{{ becario.cedula }}" disabled
+                           style="opacity:0.5;">
+                </div>
+                <div class="form-group">
+                    <label for="correo">Correo *</label>
+                    <input type="email" class="form-control" id="correo" name="correo"
+                           value="{{ becario.correo }}" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="nombres">Nombres *</label>
+                    <input type="text" class="form-control" id="nombres" name="nombres"
+                           value="{{ becario.nombres }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="apellidos">Apellidos *</label>
+                    <input type="text" class="form-control" id="apellidos" name="apellidos"
+                           value="{{ becario.apellidos }}" required>
+                </div>
+            </div>
+            <div class="form-group" style="max-width:50%;">
+                <label for="telefono">Teléfono</label>
+                <input type="tel" class="form-control" id="telefono" name="telefono"
+                       value="{{ becario.telefono or '' }}">
+            </div>
+
+            <div class="form-section-title"><i class="fas fa-medal me-2"></i>Datos Militares</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="rango_militar">Rango Militar</label>
+                    <input type="text" class="form-control" id="rango_militar" name="rango_militar"
+                           value="{{ becario.rango_militar or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="unidad">Unidad</label>
+                    <input type="text" class="form-control" id="unidad" name="unidad"
+                           value="{{ becario.unidad or '' }}">
+                </div>
+            </div>
+
+            <div class="form-section-title"><i class="fas fa-graduation-cap me-2"></i>Datos Académicos</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="carrera">Carrera</label>
+                    <input type="text" class="form-control" id="carrera" name="carrera"
+                           value="{{ becario.carrera or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="semestre">Semestre</label>
+                    <input type="number" class="form-control" id="semestre" name="semestre"
+                           value="{{ becario.semestre or '' }}" min="1" max="12">
+                </div>
+            </div>
+            <div class="form-group" style="max-width:50%;">
+                <label for="anio_fin_estimado">Año Estimado de Fin</label>
+                <input type="number" class="form-control" id="anio_fin_estimado" name="anio_fin_estimado"
+                       value="{{ becario.anio_fin_estimado or '' }}" min="2000" max="2035">
+            </div>
+
+            <div class="d-flex gap-2 mt-4 pt-3" style="border-top:1px solid var(--glass-border);">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+                <a href="{{ url_for('becarios.detalle', id_becario=becario.id_becario) }}" class="btn btn-ghost">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

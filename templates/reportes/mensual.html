@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block titulo %}Reporte Mensual — {{ mes }}/{{ anio }}{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+            <div class="breadcrumb-nav">
+                <a href="{{ url_for('admin.dashboard') }}">Dashboard</a> <span>/</span> Reporte Mensual
+            </div>
+            <h1 class="page-title">Reporte <span class="title-accent">Mensual</span></h1>
+            <p class="page-subtitle">
+                <i class="fas fa-calendar-alt me-1"></i>
+                Mes {{ mes }} de {{ anio }} · {{ datos | length }} registro(s)
+            </p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+            <form method="GET" action="{{ url_for('reportes.mensual') }}" class="d-flex gap-2">
+                <select class="form-select" name="mes" style="width:auto;">
+                    {% for m in range(1,13) %}
+                    <option value="{{ m }}" {% if m == mes %}selected{% endif %}>
+                        Mes {{ m }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <input type="number" class="form-control" name="anio" value="{{ anio }}"
+                       min="2020" max="2030" style="width:90px;">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+            <button class="btn btn-email" id="btnEnviarMensual" onclick="enviarReporteMensual()">
+                <i class="fas fa-envelope"></i> Enviar por Email
+            </button>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Rango</th>
+                    <th>Apellidos y Nombres</th>
+                    <th>Cédula</th>
+                    <th>Carrera</th>
+                    <th>Tipo de Novedad</th>
+                    <th style="text-align:center;">Total Días</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in datos %}
+                <tr>
+                    <td><span class="badge-estado badge-info">{{ r.rango_militar or '—' }}</span></td>
+                    <td style="font-weight:500;">{{ r.militar }}</td>
+                    <td style="font-family:monospace;font-size:0.8rem;">{{ r.cedula }}</td>
+                    <td>{{ r.carrera or '—' }}</td>
+                    <td><span class="badge-estado badge-activo">{{ r.tipo_novedad }}</span></td>
+                    <td style="text-align:center;font-weight:700;color:var(--gold);">{{ r.total_dias }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align:center;padding:3rem;color:var(--text-muted);">
+                        <i class="fas fa-inbox" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.4;"></i>
+                        No hay registros para este período.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="margin-top:1rem;font-size:0.8rem;color:var(--text-muted);">
+        <i class="fas fa-database me-1"></i> Datos desde vista vw_resumen_mensual en SQL Server
+    </div>
+</div>
+
+<!-- Modal resultado -->
+<div id="emailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;align-items:center;justify-content:center;">
+    <div class="card-glass" style="max-width:420px;width:90%;padding:2rem;text-align:center;">
+        <div id="emailIcon" style="font-size:3rem;margin-bottom:1rem;">📧</div>
+        <div id="emailMsg" style="font-size:1rem;font-weight:600;margin-bottom:0.5rem;"></div>
+        <div id="emailSub" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.5rem;"></div>
+        <button onclick="document.getElementById('emailModal').style.display='none';" class="btn btn-primary">Cerrar</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const EMAILJS_SERVICE_ID  = "{{ emailjs_service_id }}";
+const EMAILJS_TEMPLATE_ID = "{{ emailjs_template_id }}";
+const EMAILJS_PUBLIC_KEY  = "{{ emailjs_public_key }}";
+
+function mostrarModal(icon, msg, sub) {
+    document.getElementById('emailIcon').textContent = icon;
+    document.getElementById('emailMsg').textContent  = msg;
+    document.getElementById('emailSub').textContent  = sub;
+    document.getElementById('emailModal').style.display = 'flex';
+}
+
+async function enviarReporteMensual() {
+    const btn = document.getElementById('btnEnviarMensual');
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+    const res     = await fetch(`{{ url_for('reportes.mensual') }}?format=json&anio={{ anio }}&mes={{ mes }}`);
+    const payload = await res.json();
+
+    const filas = payload.registros.map(r =>
+        `${r.rango_militar || ''} ${r.militar} — ${r.tipo_novedad}: ${r.total_dias} días`
+    ).join('\n');
+
+    const templateParams = {
+        fecha:          `Mes {{ mes }}/{{ anio }}`,
+        total_becarios: payload.total,
+        cuerpo_reporte: filas || 'Sin registros para este período.',
+        generado_por:   "{{ session.get('nombre', 'Sistema') }}",
+    };
+
+    if (EMAILJS_PUBLIC_KEY && EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
+        try {
+            emailjs.init(EMAILJS_PUBLIC_KEY);
+            await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+            mostrarModal('✅', '¡Reporte mensual enviado!', `El resumen de {{ mes }}/{{ anio }} fue enviado correctamente.`);
+        } catch (err) {
+            mostrarModal('❌', 'Error al enviar', `EmailJS: ${err.text || err.message}`);
+        }
+    } else {
+        mostrarModal('⚠️', 'EmailJS no configurado', 'Agrega tus credenciales en el archivo .env');
+    }
+
+    btn.disabled  = false;
+    btn.innerHTML = '<i class="fas fa-envelope"></i> Enviar por Email';
+}
+</script>
+{% endblock %}
