@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block titulo %}Usuarios del Sistema{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+            <div class="breadcrumb-nav">
+                <a href="{{ url_for('admin.dashboard') }}">Dashboard</a> <span>/</span> Usuarios
+            </div>
+            <h1 class="page-title">Usuarios del <span class="title-accent">Sistema</span></h1>
+            <p class="page-subtitle">Almacenados en PostgreSQL · Autenticación y roles</p>
+        </div>
+        <a href="{{ url_for('admin.nuevo_usuario') }}" class="btn btn-gold">
+            <i class="fas fa-user-plus"></i> Nuevo Usuario
+        </a>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Cédula</th>
+                    <th>Nombre Completo</th>
+                    <th>Correo</th>
+                    <th>Rango</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in usuarios %}
+                <tr>
+                    <td style="font-family:monospace;font-size:0.8rem;">{{ u.cedula }}</td>
+                    <td style="font-weight:500;">{{ u.nombre_completo() }}</td>
+                    <td style="font-size:0.82rem;color:var(--text-muted);">{{ u.correo }}</td>
+                    <td>{{ u.rango_militar or '—' }}</td>
+                    <td>
+                        {% set rol = u.get_rol() %}
+                        <span class="badge-estado {% if rol == 'ADMINISTRADOR' %}badge-info{% else %}badge-activo{% endif %}">
+                            {{ rol or '—' }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge-estado {% if u.esta_activo() %}badge-activo{% else %}badge-inactivo{% endif %}">
+                            {% if u.esta_activo() %}Activo{% else %}Inactivo{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        {% if u.esta_activo() and u.cedula != session.get('cedula') %}
+                        <form method="POST"
+                              action="{{ url_for('admin.baja_usuario', id_usuario=u.id_usuario) }}"
+                              onsubmit="return confirm('¿Confirma dar de baja a {{ u.nombre_completo() }}?');">
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                <i class="fas fa-user-times"></i> Desactivar
+                            </button>
+                        </form>
+                        {% else %}
+                        <span style="font-size:0.78rem;color:var(--text-muted);">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align:center;padding:3rem;color:var(--text-muted);">
+                        Sin usuarios registrados.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div style="margin-top:1rem;font-size:0.8rem;color:var(--text-muted);">
+        <i class="fas fa-database me-1" style="color:#6366f1;"></i>
+        {{ usuarios | length }} usuario(s) — tabla <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;">usuario</code> en PostgreSQL
+    </div>
+</div>
+{% endblock %}

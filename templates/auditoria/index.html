@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block titulo %}Auditoría — Registro Becarios{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div class="breadcrumb-nav">
+            <a href="{{ url_for('admin.dashboard') }}">Dashboard</a> <span>/</span> Auditoría
+        </div>
+        <h1 class="page-title">Log de <span class="title-accent">Auditoría</span></h1>
+        <p class="page-subtitle">Registros generados automáticamente por triggers de SQL Server</p>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card-glass mb-4">
+        <form method="GET" action="{{ url_for('admin.auditoria') }}"
+              class="d-flex gap-3 align-items-end flex-wrap">
+            <div class="form-group mb-0">
+                <label>Tabla</label>
+                <select class="form-select" name="tabla" style="min-width:180px;">
+                    <option value="">Todas</option>
+                    {% for t in tablas %}
+                    <option value="{{ t }}" {% if filtro_tabla==t %}selected{% endif %}>{{ t }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group mb-0">
+                <label>Operación</label>
+                <select class="form-select" name="operacion" style="min-width:140px;">
+                    <option value="">Todas</option>
+                    <option value="INSERT" {% if filtro_op=='INSERT' %}selected{% endif %}>INSERT</option>
+                    <option value="UPDATE" {% if filtro_op=='UPDATE' %}selected{% endif %}>UPDATE</option>
+                    <option value="DELETE" {% if filtro_op=='DELETE' %}selected{% endif %}>DELETE</option>
+                </select>
+            </div>
+            <div class="form-group mb-0">
+                <label>Límite</label>
+                <select class="form-select" name="limite" style="min-width:100px;">
+                    <option value="50">50</option>
+                    <option value="100" selected>100</option>
+                    <option value="250">250</option>
+                    <option value="500">500</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-filter"></i> Filtrar
+            </button>
+            <a href="{{ url_for('admin.auditoria') }}" class="btn btn-ghost">
+                <i class="fas fa-times"></i> Limpiar
+            </a>
+        </form>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Fecha / Hora</th>
+                    <th>Tabla</th>
+                    <th>Operación</th>
+                    <th>Usuario</th>
+                    <th>Detalle</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in registros %}
+                <tr>
+                    <td style="color:var(--text-muted);font-size:0.78rem;">{{ r.id_auditoria }}</td>
+                    <td style="font-size:0.82rem;white-space:nowrap;">
+                        {{ r.fecha_hora.strftime('%d/%m/%Y %H:%M:%S') if r.fecha_hora else '—' }}
+                    </td>
+                    <td>
+                        <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-size:0.78rem;">
+                            {{ r.tabla_afectada }}
+                        </code>
+                    </td>
+                    <td>
+                        <span class="badge-estado
+                            {% if r.operacion == 'INSERT' %}badge-activo
+                            {% elif r.operacion == 'DELETE' %}badge-inactivo
+                            {% else %}badge-info{% endif %}">
+                            {{ r.operacion }}
+                        </span>
+                    </td>
+                    <td style="font-size:0.8rem;">{{ r.usuario_sistema or r.usuario_bd or '—' }}</td>
+                    <td>
+                        {% if r.datos_nuevos or r.datos_anteriores %}
+                        <button class="btn btn-ghost btn-sm"
+                                onclick='verDetalle("{{ r.id_auditoria }}", {{ r.datos_anteriores|tojson }}, {{ r.datos_nuevos|tojson }})'
+                                title="Ver datos">
+                            <i class="fas fa-code"></i>
+                        </button>
+                        {% else %}—{% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align:center;padding:3rem;color:var(--text-muted);">
+                        <i class="fas fa-shield-alt" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.4;"></i>
+                        Sin registros de auditoría.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="margin-top:1rem;font-size:0.8rem;color:var(--text-muted);">
+        <i class="fas fa-database me-1"></i>
+        {{ registros | length }} registro(s) — generados por triggers en SQL Server
+    </div>
+</div>
+
+<!-- Modal detalle JSON -->
+<div id="detalleModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:2000;align-items:center;justify-content:center;">
+    <div class="card-glass" style="max-width:680px;width:90%;padding:2rem;max-height:80vh;overflow-y:auto;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 style="font-size:0.9rem;font-weight:600;margin:0;color:var(--gold);">
+                <i class="fas fa-code me-2"></i> Datos de Auditoría #<span id="auditId"></span>
+            </h3>
+            <button onclick="document.getElementById('detalleModal').style.display='none';" class="btn btn-ghost btn-sm">✕</button>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:0.5rem;">
+                    Datos Anteriores
+                </div>
+                <pre id="datosAnt" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:1rem;font-size:0.75rem;color:#fca5a5;overflow-x:auto;white-space:pre-wrap;word-break:break-all;"></pre>
+            </div>
+            <div class="col-md-6">
+                <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:0.5rem;">
+                    Datos Nuevos
+                </div>
+                <pre id="datosNue" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:1rem;font-size:0.75rem;color:#a7f3d0;overflow-x:auto;white-space:pre-wrap;word-break:break-all;"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function verDetalle(id, ant, nue) {
+    document.getElementById('auditId').textContent = id;
+    document.getElementById('datosAnt').textContent = ant ? JSON.stringify(JSON.parse(ant), null, 2) : 'N/A';
+    document.getElementById('datosNue').textContent = nue ? JSON.stringify(JSON.parse(nue), null, 2) : 'N/A';
+    document.getElementById('detalleModal').style.display = 'flex';
+}
+</script>
+{% endblock %}
