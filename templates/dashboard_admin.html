@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block titulo %}Dashboard Administrador — Registro Becarios{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+    <!-- Header -->
+    <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+            <h1 class="page-title">
+                Panel <span class="title-accent">Administrador</span>
+            </h1>
+            <p class="page-subtitle">
+                <i class="fas fa-calendar-day me-1"></i>
+                Reporte del día — {{ now.strftime('%A %d de %B, %Y') if now else '' }}
+            </p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ url_for('admin.nuevo_usuario') }}" class="btn btn-gold">
+                <i class="fas fa-user-plus"></i> Nuevo Becario
+            </a>
+            <a href="{{ url_for('reportes.diario') }}" class="btn btn-primary">
+                <i class="fas fa-chart-bar"></i> Ver Reporte Completo
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="card-glass d-flex justify-content-between align-items-center">
+            <div>
+                <div class="card-title">Becarios Activos</div>
+                <div class="card-value">{{ total_activos }}</div>
+            </div>
+            <div class="card-icon">👨‍🎓</div>
+        </div>
+        <div class="card-glass d-flex justify-content-between align-items-center">
+            <div>
+                <div class="card-title">Registrados Hoy</div>
+                <div class="card-value">{{ reportes | length }}</div>
+            </div>
+            <div class="card-icon">📋</div>
+        </div>
+        <div class="card-glass d-flex justify-content-between align-items-center">
+            <div>
+                <div class="card-title">Sin Registro Hoy</div>
+                <div class="card-value">{{ total_activos - (reportes | selectattr('estado_actual') | list | length) }}</div>
+            </div>
+            <div class="card-icon">⚠️</div>
+        </div>
+        <div class="card-glass d-flex justify-content-between align-items-center">
+            <div>
+                <div class="card-title">Base de Datos</div>
+                <div style="font-size:0.75rem;margin-top:0.25rem;">
+                    <span class="badge-estado badge-activo">🐘 PostgreSQL</span><br>
+                    <span class="badge-estado badge-info" style="margin-top:4px;">🗄️ SQL Server</span>
+                </div>
+            </div>
+            <div class="card-icon">🔗</div>
+        </div>
+    </div>
+
+    <!-- Tabla Reporte Diario -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 style="font-size:1.1rem;font-weight:600;color:#fff;">
+            <i class="fas fa-list-alt me-2" style="color:var(--gold);"></i>
+            Novedades del Día
+        </h2>
+        <a href="{{ url_for('reportes.diario', format='json') }}" id="btnVerJson"
+           class="btn btn-ghost btn-sm" target="_blank">
+            <i class="fas fa-code"></i> Ver JSON
+        </a>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Rango</th>
+                    <th>Apellidos y Nombres</th>
+                    <th>Cédula</th>
+                    <th>Carrera</th>
+                    <th>Estado</th>
+                    <th>Hora</th>
+                    <th>Observación</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reportes %}
+                <tr>
+                    <td>
+                        <span class="badge-estado badge-info">{{ r.rango_militar or '—' }}</span>
+                    </td>
+                    <td style="font-weight:500;">{{ r.militar }}</td>
+                    <td style="font-family:monospace;font-size:0.8rem;">{{ r.cedula }}</td>
+                    <td>{{ r.carrera or '—' }}</td>
+                    <td>
+                        {% if r.estado_actual and r.estado_actual != 'Sin registro' %}
+                            <span class="badge-estado badge-activo">
+                                <i class="fas fa-check-circle"></i> {{ r.estado_actual }}
+                            </span>
+                        {% else %}
+                            <span class="badge-estado badge-inactivo">
+                                <i class="fas fa-times-circle"></i> Sin registro
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:0.82rem;color:var(--text-muted);">{{ r.hora or '—' }}</td>
+                    <td style="font-size:0.82rem;color:var(--text-muted);">{{ r.observacion or '' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align:center;padding:3rem;color:var(--text-muted);">
+                        <i class="fas fa-inbox" style="font-size:2rem;display:block;margin-bottom:0.5rem;"></i>
+                        No hay registros de novedades para el día de hoy.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Accesos Rápidos -->
+    <div class="row g-3 mt-3">
+        <div class="col-md-4">
+            <a href="{{ url_for('becarios.lista') }}" class="card-glass d-block text-decoration-none"
+               style="text-align:center;padding:1.5rem;">
+                <div style="font-size:2rem;margin-bottom:0.5rem;">👨‍🎓</div>
+                <div class="card-title">Gestionar Becarios</div>
+                <div style="font-size:0.8rem;color:var(--text-muted);">CRUD completo</div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ url_for('reportes.mensual') }}" class="card-glass d-block text-decoration-none"
+               style="text-align:center;padding:1.5rem;">
+                <div style="font-size:2rem;margin-bottom:0.5rem;">📊</div>
+                <div class="card-title">Reporte Mensual</div>
+                <div style="font-size:0.8rem;color:var(--text-muted);">Enviar por email</div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ url_for('admin.auditoria') }}" class="card-glass d-block text-decoration-none"
+               style="text-align:center;padding:1.5rem;">
+                <div style="font-size:2rem;margin-bottom:0.5rem;">🔍</div>
+                <div class="card-title">Auditoría</div>
+                <div style="font-size:0.8rem;color:var(--text-muted);">Log de cambios en BD</div>
+            </a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Pasar configuración EmailJS al script
+    window.EMAILJS_CONFIG = {
+        serviceId:  "{{ config.get('EMAILJS_SERVICE_ID', '') }}",
+        templateId: "{{ config.get('EMAILJS_TEMPLATE_ID', '') }}",
+        publicKey:  "{{ config.get('EMAILJS_PUBLIC_KEY', '') }}"
+    };
+</script>
+{% endblock %}

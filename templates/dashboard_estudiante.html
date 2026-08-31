@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block titulo %}Mi Panel — {{ session.get('nombre', '') }}{% endblock %}
+
+{% block content %}
+<div class="page-wrapper" style="max-width:800px;">
+
+    <div class="page-header">
+        <h1 class="page-title">
+            Mi <span class="title-accent">Panel</span>
+        </h1>
+        {% if becario %}
+        <p class="page-subtitle">
+            <i class="fas fa-id-badge me-1"></i>
+            {{ becario.identificacion_militar() }} — {{ becario.carrera or 'Sin carrera registrada' }}
+            {% if becario.semestre %} · Semestre {{ becario.semestre }}{% endif %}
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- Estado de hoy -->
+    {% if novedad_hoy and novedad_hoy.fecha.strftime('%Y-%m-%d') == today %}
+    <div class="card-glass mb-4" style="border-color:rgba(16,185,129,0.4);">
+        <div class="d-flex align-items-center gap-3">
+            <div style="font-size:2rem;">✅</div>
+            <div>
+                <div style="font-weight:600;color:#10b981;font-size:1rem;">Novedad registrada hoy</div>
+                <div style="font-size:0.875rem;color:var(--text-muted);">
+                    {{ novedad_hoy.nombre_estado() }} ·
+                    {{ novedad_hoy.hora.strftime('%H:%M') if novedad_hoy.hora else '' }}
+                    {% if novedad_hoy.observacion %}— {{ novedad_hoy.observacion }}{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Formulario de Novedad -->
+    <div class="form-card mb-4" style="max-width:100%;">
+        <h2 style="font-size:1rem;font-weight:600;margin-bottom:1.25rem;color:#fff;">
+            <i class="fas fa-edit me-2" style="color:var(--gold);"></i>
+            Registrar Novedad del Día
+        </h2>
+
+        <form method="POST" action="{{ url_for('becarios.dashboard_becario') }}" id="formNovedad">
+            <div class="form-group">
+                <label for="id_estado">Estado de hoy</label>
+                <select class="form-select" id="id_estado" name="id_estado" required>
+                    <option value="" disabled selected>— Selecciona tu estado —</option>
+                    {% for estado in estados %}
+                    <option value="{{ estado.id }}"
+                        {% if novedad_hoy and novedad_hoy.id_catalogo_estado == estado.id %}selected{% endif %}>
+                        {{ estado.nombre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="observacion">Observación (opcional)</label>
+                <textarea
+                    class="form-control"
+                    id="observacion"
+                    name="observacion"
+                    rows="3"
+                    placeholder="Ej: Clase de 08:00 a 12:00, permiso médico hasta las 10:00..."
+                    style="resize:vertical;"
+                >{{ novedad_hoy.observacion if novedad_hoy else '' }}</textarea>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary" id="btnRegistrar">
+                    <i class="fas fa-save"></i>
+                    {% if novedad_hoy %}Actualizar registro{% else %}Registrar novedad{% endif %}
+                </button>
+                <button type="reset" class="btn btn-ghost">
+                    <i class="fas fa-undo"></i> Limpiar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Mi información -->
+    {% if becario %}
+    <div class="card-glass">
+        <h2 style="font-size:1rem;font-weight:600;margin-bottom:1.25rem;color:#fff;">
+            <i class="fas fa-user me-2" style="color:var(--gold);"></i> Mi Información
+        </h2>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:0.25rem;">Cédula</div>
+                <div style="font-weight:500;font-family:monospace;">{{ becario.cedula }}</div>
+            </div>
+            <div class="col-md-6">
+                <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:0.25rem;">Correo</div>
+                <div style="font-weight:500;">{{ becario.correo }}</div>
+            </div>
+            <div class="col-md-6">
+                <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:0.25rem;">Universidad</div>
+                <div>{{ becario.universidad or '—' }}</div>
+            </div>
+            <div class="col-md-6">
+                <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:0.25rem;">Carrera / Semestre</div>
+                <div>{{ becario.carrera or '—' }} {% if becario.semestre %}· Sem. {{ becario.semestre }}{% endif %}</div>
+            </div>
+            <div class="col-md-6">
+                <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:0.25rem;">Unidad</div>
+                <div>{{ becario.unidad or '—' }}</div>
+            </div>
+            <div class="col-md-6">
+                <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:0.25rem;">Estimado fin de beca</div>
+                <div>{{ becario.anio_fin_estimado or '—' }}</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.getElementById('btnRegistrar').addEventListener('click', function() {
+        this.classList.add('btn-loading');
+    });
+
+    // Mostrar fecha de hoy en el formulario
+    const today = new Date().toLocaleDateString('es-EC', {
+        weekday:'long', year:'numeric', month:'long', day:'numeric'
+    });
+    document.querySelector('.page-subtitle') &&
+        (document.querySelector('.page-subtitle').innerHTML += ` <span style="color:var(--gold);"> · ${today}</span>`);
+</script>
+{% endblock %}
