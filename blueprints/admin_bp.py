@@ -106,6 +106,11 @@ def nuevo_usuario():
             flash("El teléfono debe tener exactamente 10 dígitos numéricos.", "warning")
             return redirect(url_for("admin.nuevo_usuario"))
 
+        if anio_inicio and anio_fin_estimado:
+            if int(anio_fin_estimado) < int(anio_inicio):
+                flash("El año de fin estimado no puede ser menor al año de inicio.", "warning")
+                return redirect(url_for("admin.nuevo_usuario"))
+
         pwd_hash = generate_password_hash(password)
 
         try:

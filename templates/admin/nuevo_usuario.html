@@ -94,11 +94,14 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="anio_inicio">Año Inicio</label>
-                        <input type="number" class="form-control" id="anio_inicio" name="anio_inicio" min="2000" max="2030">
+                        <input type="number" class="form-control" id="anio_inicio" name="anio_inicio" min="2000" max="2030"
+                               oninput="validarAnios();">
                     </div>
                     <div class="form-group">
                         <label for="anio_fin_estimado">Año Fin Estimado</label>
-                        <input type="number" class="form-control" id="anio_fin_estimado" name="anio_fin_estimado" min="2000" max="2035">
+                        <input type="number" class="form-control" id="anio_fin_estimado" name="anio_fin_estimado" min="2000" max="2035"
+                               oninput="validarAnios();">
+                        <div id="aniosFeedback" style="font-size:0.78rem;margin-top:0.3rem;"></div>
                     </div>
                 </div>
                 <div class="form-row">
@@ -197,6 +200,22 @@ function validarPassword(password) {
     }
 }
 
+function validarAnios() {
+    const fb = document.getElementById('aniosFeedback');
+    const ini = document.getElementById('anio_inicio');
+    const fin = document.getElementById('anio_fin_estimado');
+    
+    if (!ini.value || !fin.value) { fb.textContent = ''; fin.style.borderColor=''; return; }
+    
+    if (parseInt(fin.value) >= parseInt(ini.value)) {
+        fb.innerHTML='<span style="color:#10b981;"><i class="fas fa-check-circle"></i> Años lógicos</span>';
+        fin.style.borderColor='#10b981';
+    } else {
+        fb.innerHTML='<span style="color:#ef4444;"><i class="fas fa-times-circle"></i> El año fin no puede ser menor al inicio</span>';
+        fin.style.borderColor='#ef4444';
+    }
+}
+
 function toggleBecarioFields(val) {
     const sel = document.getElementById('id_perfil');
     const opt = sel.options[sel.selectedIndex];
@@ -209,6 +228,8 @@ document.getElementById('formNuevoUsuario').addEventListener('submit', function(
     const correo = document.getElementById('correo').value;
     const telefono = document.getElementById('telefono').value;
     const password = document.getElementById('password').value;
+    const anio_inicio = document.getElementById('anio_inicio').value;
+    const anio_fin = document.getElementById('anio_fin_estimado').value;
     
     const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     let valido = true;
@@ -217,6 +238,7 @@ document.getElementById('formNuevoUsuario').addEventListener('submit', function(
     if (!regexCorreo.test(correo)) valido = false;
     if (telefono && telefono.length !== 10) valido = false;
     if (password.length < 8) valido = false;
+    if (anio_inicio && anio_fin && parseInt(anio_fin) < parseInt(anio_inicio)) valido = false;
 
     if (!valido) {
         e.preventDefault();
