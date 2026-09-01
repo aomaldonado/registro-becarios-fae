@@ -12,7 +12,7 @@
         <p class="page-subtitle">Se crea en PostgreSQL (auth) y si es Becario, también en SQL Server</p>
     </div>
 
-    <form method="POST" action="{{ url_for('admin.nuevo_usuario') }}" novalidate>
+    <form method="POST" action="{{ url_for('admin.nuevo_usuario') }}" id="formNuevoUsuario">
         <div class="form-card" style="max-width:700px;">
 
             <div class="form-section-title"><i class="fas fa-id-card me-2"></i>Identidad</div>
@@ -27,7 +27,9 @@
                 <div class="form-group">
                     <label for="correo">Correo *</label>
                     <input type="email" class="form-control" id="correo" name="correo"
-                           required placeholder="usuario@becarios.mil.ec">
+                           required placeholder="usuario@becarios.mil.ec"
+                           oninput="validarCorreo(this.value);">
+                    <div id="correoFeedback" style="font-size:0.78rem;margin-top:0.3rem;"></div>
                 </div>
             </div>
             <div class="form-row">
@@ -45,7 +47,8 @@
                     <label for="telefono">Teléfono</label>
                     <input type="text" class="form-control" id="telefono" name="telefono" placeholder="0999999999"
                            maxlength="10" minlength="10" pattern="[0-9]{10}"
-                           oninput="this.value=this.value.replace(/\D/g,'');">
+                           oninput="this.value=this.value.replace(/\D/g,'');validarTelefono(this.value);">
+                    <div id="telefonoFeedback" style="font-size:0.78rem;margin-top:0.3rem;"></div>
                 </div>
                 <div class="form-group">
                     <label for="rango">Rango Militar</label>
@@ -149,12 +152,58 @@ function validarCedula(cedula) {
     }
 }
 
+function validarCorreo(correo) {
+    const fb = document.getElementById('correoFeedback');
+    const el = document.getElementById('correo');
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (correo.length === 0) { fb.textContent = ''; el.style.borderColor=''; return; }
+    
+    if (regex.test(correo)) {
+        fb.innerHTML='<span style="color:#10b981;"><i class="fas fa-check-circle"></i> Correo válido</span>';
+        el.style.borderColor='#10b981';
+    } else {
+        fb.innerHTML='<span style="color:#ef4444;"><i class="fas fa-times-circle"></i> Formato de correo inválido</span>';
+        el.style.borderColor='#ef4444';
+    }
+}
+
+function validarTelefono(telefono) {
+    const fb = document.getElementById('telefonoFeedback');
+    const el = document.getElementById('telefono');
+    if (telefono.length === 0) { fb.textContent = ''; el.style.borderColor=''; return; }
+    
+    if (telefono.length === 10) {
+        fb.innerHTML='<span style="color:#10b981;"><i class="fas fa-check-circle"></i> Teléfono válido</span>';
+        el.style.borderColor='#10b981';
+    } else {
+        fb.innerHTML='<span style="color:#ef4444;"><i class="fas fa-times-circle"></i> Debe tener 10 dígitos (tiene ' + telefono.length + ')</span>';
+        el.style.borderColor='#ef4444';
+    }
+}
+
 function toggleBecarioFields(val) {
-    // Mostrar campos académicos si el perfil es BECARIO
     const sel = document.getElementById('id_perfil');
     const opt = sel.options[sel.selectedIndex];
     document.getElementById('becarioFields').style.display =
         opt.text.includes('BECARIO') ? 'block' : 'none';
 }
+
+document.getElementById('formNuevoUsuario').addEventListener('submit', function(e) {
+    const cedula = document.getElementById('cedula').value;
+    const correo = document.getElementById('correo').value;
+    const telefono = document.getElementById('telefono').value;
+    
+    const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    let valido = true;
+
+    if (cedula.length !== 10) valido = false;
+    if (!regexCorreo.test(correo)) valido = false;
+    if (telefono && telefono.length !== 10) valido = false;
+
+    if (!valido) {
+        e.preventDefault();
+        alert("Por favor corrige los errores en el formulario antes de guardar.");
+    }
+});
 </script>
 {% endblock %}
