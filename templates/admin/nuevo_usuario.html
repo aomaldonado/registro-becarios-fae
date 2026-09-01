@@ -72,7 +72,9 @@
                 <div class="form-group">
                     <label for="password">Contraseña temporal *</label>
                     <input type="password" class="form-control" id="password" name="password"
-                           required minlength="8" placeholder="Mínimo 8 caracteres">
+                           required minlength="8" placeholder="Mínimo 8 caracteres"
+                           oninput="validarPassword(this.value);">
+                    <div id="passwordFeedback" style="font-size:0.78rem;margin-top:0.3rem;"></div>
                 </div>
             </div>
 
@@ -181,6 +183,20 @@ function validarTelefono(telefono) {
     }
 }
 
+function validarPassword(password) {
+    const fb = document.getElementById('passwordFeedback');
+    const el = document.getElementById('password');
+    if (password.length === 0) { fb.textContent = ''; el.style.borderColor=''; return; }
+    
+    if (password.length >= 8) {
+        fb.innerHTML='<span style="color:#10b981;"><i class="fas fa-check-circle"></i> Contraseña válida</span>';
+        el.style.borderColor='#10b981';
+    } else {
+        fb.innerHTML='<span style="color:#ef4444;"><i class="fas fa-times-circle"></i> Mínimo 8 caracteres (tiene ' + password.length + ')</span>';
+        el.style.borderColor='#ef4444';
+    }
+}
+
 function toggleBecarioFields(val) {
     const sel = document.getElementById('id_perfil');
     const opt = sel.options[sel.selectedIndex];
@@ -192,6 +208,7 @@ document.getElementById('formNuevoUsuario').addEventListener('submit', function(
     const cedula = document.getElementById('cedula').value;
     const correo = document.getElementById('correo').value;
     const telefono = document.getElementById('telefono').value;
+    const password = document.getElementById('password').value;
     
     const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     let valido = true;
@@ -199,6 +216,7 @@ document.getElementById('formNuevoUsuario').addEventListener('submit', function(
     if (cedula.length !== 10) valido = false;
     if (!regexCorreo.test(correo)) valido = false;
     if (telefono && telefono.length !== 10) valido = false;
+    if (password.length < 8) valido = false;
 
     if (!valido) {
         e.preventDefault();
