@@ -2,7 +2,7 @@
 {% block titulo %}Auditoría — Registro Becarios{% endblock %}
 
 {% block content %}
-<div class="page-wrapper">
+<div class="page-wrapper" id="pdfContenido">
     <div class="page-header">
         <div class="breadcrumb-nav">
             <a href="{{ url_for('admin.dashboard') }}">Dashboard</a> <span>/</span> Auditoría
@@ -12,7 +12,7 @@
     </div>
 
     <!-- Filtros -->
-    <div class="card-glass mb-4">
+    <div class="card-glass mb-4 no-print">
         <form method="GET" action="{{ url_for('admin.auditoria') }}"
               class="d-flex gap-3 align-items-end flex-wrap">
             <div class="form-group mb-0">
@@ -44,6 +44,9 @@
             </div>
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-filter"></i> Filtrar
+            </button>
+            <button type="button" class="btn btn-danger" onclick="exportarAPDF('pdfContenido', 'Reporte_Auditoria.pdf')">
+                <i class="fas fa-file-pdf"></i> PDF
             </button>
             <a href="{{ url_for('admin.auditoria') }}" class="btn btn-ghost">
                 <i class="fas fa-times"></i> Limpiar

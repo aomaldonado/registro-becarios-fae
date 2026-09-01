@@ -2,7 +2,7 @@
 {% block titulo %}Reporte Mensual — {{ mes }}/{{ anio }}{% endblock %}
 
 {% block content %}
-<div class="page-wrapper">
+<div class="page-wrapper" id="pdfContenido">
     <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
             <div class="breadcrumb-nav">
@@ -14,7 +14,7 @@
                 Mes {{ mes }} de {{ anio }} · {{ datos | length }} registro(s)
             </p>
         </div>
-        <div class="d-flex gap-2 flex-wrap align-items-center">
+        <div class="d-flex gap-2 flex-wrap align-items-center no-print">
             <form method="GET" action="{{ url_for('reportes.mensual') }}" class="d-flex gap-2">
                 <select class="form-select" name="mes" style="width:auto;">
                     {% for m in range(1,13) %}
@@ -29,8 +29,11 @@
                     <i class="fas fa-search"></i>
                 </button>
             </form>
+            <button class="btn btn-danger btn-sm" onclick="exportarAPDF('pdfContenido', 'Reporte_Mensual_{{ mes }}_{{ anio }}.pdf')">
+                <i class="fas fa-file-pdf"></i> PDF
+            </button>
             <button class="btn btn-email" id="btnEnviarMensual" onclick="enviarReporteMensual()">
-                <i class="fas fa-envelope"></i> Enviar por Email
+                <i class="fas fa-envelope"></i> Correo
             </button>
         </div>
     </div>

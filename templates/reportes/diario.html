@@ -2,7 +2,7 @@
 {% block titulo %}Reporte Diario — {{ fecha }}{% endblock %}
 
 {% block content %}
-<div class="page-wrapper">
+<div class="page-wrapper" id="pdfContenido">
     <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
             <div class="breadcrumb-nav">
@@ -14,7 +14,7 @@
                 · {{ datos | length }} becario(s)
             </p>
         </div>
-        <div class="d-flex gap-2 flex-wrap align-items-center">
+        <div class="d-flex gap-2 flex-wrap align-items-center no-print">
             <!-- Selector de fecha -->
             <form method="GET" action="{{ url_for('reportes.diario') }}" class="d-flex gap-2">
                 <input type="date" class="form-control" name="fecha"
@@ -23,10 +23,14 @@
                     <i class="fas fa-search"></i>
                 </button>
             </form>
+            <!-- Botón PDF -->
+            <button class="btn btn-danger btn-sm" onclick="exportarAPDF('pdfContenido', 'Reporte_Diario_{{ fecha }}.pdf')">
+                <i class="fas fa-file-pdf"></i> PDF
+            </button>
             <!-- Botón EmailJS -->
             <button class="btn btn-email" id="btnEnviarEmail"
                     onclick="enviarReporteEmail()">
-                <i class="fas fa-envelope"></i> Enviar por Email
+                <i class="fas fa-envelope"></i> Correo
             </button>
         </div>
     </div>
