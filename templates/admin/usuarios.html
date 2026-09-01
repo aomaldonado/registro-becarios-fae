@@ -35,7 +35,7 @@
                     <td style="font-family:monospace;font-size:0.8rem;">{{ u.cedula }}</td>
                     <td style="font-weight:500;">{{ u.nombre_completo() }}</td>
                     <td style="font-size:0.82rem;color:var(--text-muted);">{{ u.correo }}</td>
-                    <td>{{ u.rango_militar or '—' }}</td>
+                    <td>{{ (u.rango_militar or '') | title or '—' }}</td>
                     <td>
                         {% set rol = u.get_rol() %}
                         <span class="badge-estado {% if rol == 'ADMINISTRADOR' %}badge-info{% else %}badge-activo{% endif %}">

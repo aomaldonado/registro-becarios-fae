@@ -84,7 +84,7 @@ def nuevo_usuario():
         nombres   = request.form.get("nombres", "").strip()
         apellidos = request.form.get("apellidos", "").strip()
         correo    = request.form.get("correo", "").strip().lower()
-        rango     = request.form.get("rango", "").strip()
+        rango     = request.form.get("rango", "").strip().title()
         id_perfil = request.form.get("id_perfil")
         password  = request.form.get("password", "")
 
