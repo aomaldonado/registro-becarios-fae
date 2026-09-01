@@ -43,7 +43,9 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="telefono">Teléfono</label>
-                    <input type="text" class="form-control" id="telefono" name="telefono" placeholder="0999999999">
+                    <input type="text" class="form-control" id="telefono" name="telefono" placeholder="0999999999"
+                           maxlength="10" minlength="10" pattern="[0-9]{10}"
+                           oninput="this.value=this.value.replace(/\D/g,'');">
                 </div>
                 <div class="form-group">
                     <label for="rango">Rango Militar</label>

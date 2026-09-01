@@ -97,6 +97,15 @@ def nuevo_usuario():
         numero_militar    = request.form.get("numero_militar", "").strip()
         telefono          = request.form.get("telefono", "").strip()
 
+        import re
+        if not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", correo):
+            flash("El formato del correo electrónico no es válido.", "warning")
+            return redirect(url_for("admin.nuevo_usuario"))
+
+        if telefono and (len(telefono) != 10 or not telefono.isdigit()):
+            flash("El teléfono debe tener exactamente 10 dígitos numéricos.", "warning")
+            return redirect(url_for("admin.nuevo_usuario"))
+
         pwd_hash = generate_password_hash(password)
 
         try:
