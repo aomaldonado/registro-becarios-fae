@@ -68,5 +68,13 @@ EMAILJS_TEMPLATE_ID=tu_template_id
 5. **Acceder a la aplicación**:
    Abre tu navegador web e ingresa a: `http://127.0.0.1:5000`
 
-## 5. Accesos del Sistema
-*(Añadir aquí un usuario/contraseña de administrador de prueba si es necesario para la revisión del profesor).*
+## 5. Accesos del Sistema (Datos de Prueba)
+Puedes utilizar las siguientes credenciales para probar los diferentes perfiles del sistema:
+
+**Perfil Administrador:**
+* **Usuario (Correo):** `admin@becarios.mil.ec`
+* **Contraseña:** `Admin2026!`
+
+**Perfil Becario:**
+* **Usuario (Correo):** `andrekomr19@gmail.com`
+* **Contraseña:** `12345678`
