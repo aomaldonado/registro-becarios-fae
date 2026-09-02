@@ -11,12 +11,12 @@ Este proyecto es un aplicativo web desarrollado en Python (Flask) para la gesti�
 ## 2. Restauración de las Bases de Datos
 En la carpeta principal del proyecto encontrarás los archivos necesarios para restaurar las estructuras de las bases de datos:
 
-1. **PostgreSQL (`db_postgres.sql` / `.backup`)**: 
+1. **PostgreSQL (`db_postgres.backup`)**: 
    * Crea una base de datos vacía llamada `registro_becarios`.
-   * Restaura la estructura y procedimientos almacenados utilizando pgAdmin (Restore) o ejecutando el script SQL provisto.
-2. **SQL Server (`db_sqlserver.sql` / `.bak`)**: 
-   * Crea una base de datos llamada `registro_becarios_ss`.
-   * Restaura el archivo `.bak` o ejecuta el script SQL provisto usando SQL Server Management Studio (SSMS).
+   * Restaura la estructura y procedimientos almacenados utilizando la opción "Restore" de pgAdmin y seleccionando este archivo `.backup`.
+2. **SQL Server (`db_sqlserver.bak`)**: 
+   * Abre SQL Server Management Studio (SSMS).
+   * Haz clic derecho en "Databases" -> "Restore Database..." y selecciona el archivo `.bak` provisto.
 
 ## 3. Configuración del Entorno (`.env`)
 El proyecto necesita un archivo `.env` en la raíz (junto a `app.py`) con las credenciales de conexión. Asegúrate de modificar los valores según tu entorno local:
