@@ -1,0 +1,79 @@
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; }
+    h1 { color: #2c3e50; }
+    h2 { color: #34495e; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+    p { margin-bottom: 15px; }
+    code { background-color: #f4f4f4; padding: 2px 5px; border-radius: 3px; font-family: monospace; }
+    pre { background-color: #f4f4f4; padding: 10px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; }
+    .question { font-weight: bold; color: #16a085; }
+</style>
+</head>
+<body>
+    <h1>Preguntas y Respuestas para Defensa de Proyecto</h1>
+
+    <h2>Consulta 1: Pilares de la POO en el código</h2>
+    <p class="question">P: Indícame en el código en dónde se aplican los pilares de POO por si pregunten en la defensa del proyecto.</p>
+    <p><strong>R:</strong> Tu proyecto aplica los 4 pilares fundamentales de la POO, principalmente en el archivo <code>models_pg.py</code>:</p>
+    <ul>
+        <li><strong>Herencia:</strong> Las clases como <code>Usuario</code> heredan de <code>db.Model</code>. Las clases <code>PerfilAdmin</code> y <code>PerfilBecario</code> heredan de <code>PerfilBase</code>.</li>
+        <li><strong>Polimorfismo:</strong> Los métodos <code>dashboard_url()</code> y <code>permisos()</code> son sobrescritos en <code>PerfilAdmin</code> y <code>PerfilBecario</code> para devolver valores diferentes.</li>
+        <li><strong>Encapsulamiento:</strong> La clase <code>Usuario</code> oculta la lógica de encriptación usando los métodos <code>set_password()</code> y <code>check_password()</code>.</li>
+        <li><strong>Abstracción:</strong> <code>PerfilBase</code> actúa como una clase abstracta definiendo métodos (con <code>NotImplementedError</code>) que las clases hijas deben implementar obligatoriamente.</li>
+    </ul>
+
+    <h2>Consulta 2: Comandos para levantar el servidor</h2>
+    <p class="question">P: ¿Cuáles son los comandos para levantar el servidor tanto el entorno virtual como el aplicativo?</p>
+    <p><strong>R:</strong> En Windows, abre la terminal en la carpeta del proyecto y ejecuta:</p>
+    <ul>
+        <li><strong>Activar el entorno virtual:</strong> <code>venv\Scripts\activate</code></li>
+        <li><strong>Levantar el aplicativo:</strong> <code>python app.py</code> o <code>flask run</code></li>
+    </ul>
+
+    <h2>Consulta 3: Cálculo de valores del Dashboard (Backend)</h2>
+    <p class="question">P: Indícame en el código de dónde hace el cálculo para obtener los valores para el dashboard.</p>
+    <p><strong>R:</strong> Se calculan en el archivo <code>blueprints/admin_bp.py</code> (ruta <code>/dashboard</code>):</p>
+    <ul>
+        <li><strong>Registros Diarios:</strong> Se ejecutan mediante el procedimiento almacenado <code>sp_reporte_diario</code>.</li>
+        <li><strong>Becarios Activos:</strong> Se obtienen con la consulta SQL <code>SELECT COUNT(*) FROM dbo.becarios WHERE estado = 'A'</code>.</li>
+    </ul>
+
+    <h2>Consulta 4: Valores del Dashboard (Frontend/HTML)</h2>
+    <p class="question">P: ¿Pero en el HTML?</p>
+    <p><strong>R:</strong> En el archivo <code>templates/dashboard_admin.html</code> se usa el motor de plantillas Jinja2:</p>
+    <ul>
+        <li><code>{{ total_activos }}</code>: Muestra los activos.</li>
+        <li><code>{{ reportes | length }}</code>: Cuenta cuántos registros hubo hoy.</li>
+        <li><code>{{ total_activos - (reportes | selectattr('estado_actual') | list | length) }}</code>: Resta matemáticamente los que faltan por registrar.</li>
+    </ul>
+
+    <h2>Consulta 5: Validaciones de formularios</h2>
+    <p class="question">P: Muéstrame en el código en dónde se realizan las validaciones en el formulario.</p>
+    <p><strong>R:</strong> Se realizan en dos niveles:</p>
+    <ul>
+        <li><strong>Backend (Python):</strong> En <code>admin_bp.py</code> (función <code>nuevo_usuario</code>) se valida con expresiones regulares el correo (<code>re.match</code>), el teléfono (longitud y dígitos) y la congruencia de las fechas. También se capturan errores de Base de Datos (como <code>CEDULA_DUPLICADA</code>).</li>
+        <li><strong>Frontend (HTML):</strong> Usando atributos nativos como <code>required</code>, <code>type="email"</code> o <code>minlength</code>.</li>
+    </ul>
+
+    <h2>Consulta 6: Modificadores de Acceso (Público, Privado, Protegido)</h2>
+    <p class="question">P: El profe preguntó que se indique en el código y si es público, privado o protegido los pilares de POO.</p>
+    <p><strong>R:</strong> En Python no existen palabras reservadas para esto; se usan convenciones (guiones bajos):</p>
+    <ul>
+        <li><strong>Públicos:</strong> Atributos sin guion bajo (ej. <code>nombres</code>, <code>dashboard_url()</code>). Accesibles desde cualquier parte.</li>
+        <li><strong>Protegidos:</strong> Un guion bajo inicial (ej. <code>_obtener_conexion_ss()</code> en <code>admin_bp.py</code>). Indica que es de uso interno para ese módulo o clases hijas.</li>
+        <li><strong>Privados:</strong> Doble guion bajo inicial (ej. <code>__tablename__</code> en <code>models_pg.py</code>). Aplica "Name Mangling" para evitar modificaciones accidentales desde afuera.</li>
+    </ul>
+
+    <h2>Consulta 7: Guía rápida para la defensa (Clases exactas)</h2>
+    <p class="question">P: Tienes que indicarme en qué clases y el nombre del archivo de donde puedo encontrar el código para demostrar la aplicación de herencia, polimorfismo, encapsulamiento, abstracción.</p>
+    <p><strong>R:</strong> Archivo a mostrar: <strong><code>models_pg.py</code></strong></p>
+    <ul>
+        <li><strong>Abstracción:</strong> Clase <code>PerfilBase</code> (Líneas 83-94). Es una plantilla que define métodos sin implementarlos.</li>
+        <li><strong>Herencia:</strong> Clases <code>Usuario</code> (hereda de db.Model), <code>PerfilAdmin</code> y <code>PerfilBecario</code> (heredan de PerfilBase).</li>
+        <li><strong>Polimorfismo:</strong> Método <code>dashboard_url()</code> (Líneas 100 y 111). Responde de forma distinta si es Admin o Becario.</li>
+        <li><strong>Encapsulamiento:</strong> Clase <code>Usuario</code> (Líneas 22-43). Oculta la complejidad del hash de la contraseña obligando a usar <code>set_password()</code> y <code>check_password()</code>.</li>
+    </ul>
+</body>
+</html>
